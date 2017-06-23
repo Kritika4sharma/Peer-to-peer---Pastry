@@ -115,7 +115,8 @@ class Storage():
 
 	def get_ip_from_nodeid(self,nodeid):
 		query = 'SELECT ip FROM peer_servers where server_id = ?'                 # to get the number of rows present in table 
-		rows = self.cursor.execute(query,(nodeid,)).fetchone()[0]
+		rows = self.cursor.execute(query,(int(nodeid),)).fetchone()[0]
+		#print rows
 		return rows
 
 	def get_filekey(self):
@@ -138,7 +139,10 @@ class Storage():
 		if(i>=len(rows)):
 			i -= 1
 
-		print rows
+		return rows[i]		
+
+		# for more than 1 nearest server
+		'''print rows
 		print i
 		k = 2
 		ind = i
@@ -153,16 +157,15 @@ class Storage():
 			new_list = new_list + " " + rows[ind][1]
 			ind += 1;
 			k -= 1;
-		
-		return new_list
+		'''
+		#return new_list
 
 
 	def clean(self):
 		# must remove outdated entries
 		pass
 
-'''
-stor = Storage()
+'''stor = Storage()
 
 print "Creating dummy table"
 #---------Dummy Table---------
@@ -211,3 +214,5 @@ stor.add_id_server('10.0.0.3',server_id)
 '''print stor.get_first_server('10.0.0.2')'''
 
 #print stor.get_k_nearest_server("1194")
+
+#print stor.get_ip_from_nodeid('1146')

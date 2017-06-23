@@ -29,7 +29,7 @@ def connect_to_persistence(message):
     
     #---------------------------------
     #host = '172.26.35.147'
-    port = 9977                # Reserve a port for your service.
+    port = 9986                # Reserve a port for your service.
 
     s.connect((host, port))
     print "connected to persis"
@@ -48,8 +48,9 @@ print args.upload
 
 if args.upload:
     c = Client()
+    #c.send_file_to_server(args.upload+"<key>"+'567','172.17.14.23')
     msg = connect_to_persistence("client 2:SERVER2")  # 
-    #filekey = hashlib.sha1(args.upload).hexdigest()
+    filekey = hashlib.sha1(args.upload).hexdigest()
     server = msg[:msg.rfind(':')]
     filekey = msg[msg.rfind(':')+1:]
     print server," --",filekey
@@ -69,7 +70,8 @@ if args.download:
     filename = msg[msg.rfind(':')+1:]
     file_id = msg[:msg.rfind(':')]
     print "Filekey to download : ",file_id,"-- file name = ",filename
-   # server = connect_to_persistence("client 2:SERVER1")
-   # target_ip = c.search_pastry(server,file_id)     # put serverip got from persistence here
-   # c.download_file(target_ip, filename)
+    server = connect_to_persistence("client 2:SERVER1")
+    target_ip = c.search_pastry(server,file_id)     # put serverip got from persistence here
+    print "Target ip is :",target_ip
+    c.download_file(target_ip, filename)
 

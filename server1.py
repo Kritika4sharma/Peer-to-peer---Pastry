@@ -14,9 +14,6 @@ import Find_IP
 import hashlib
 import Trie
 import difflib
-import bisect
-import Queue
-import threading
 
 import FileServer
 
@@ -26,17 +23,13 @@ char_to_int = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':1
 BUFFER = 4096
 count = 0
 
-def tester(self,key):
-	print "testing func ",self.mental,key
 
 def update_trie(self, filename,master_ip) :
-	print "hey  uuuuuoo"
-	print filename,"master_ip :",master_ip
 	soc_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	print filename
 	print self.MASTER_HOST
-	self.MASTER_PORT = self.MASTER_PORT
+	self.MASTER_PORT = 2045
 
 	while True :
 		try :
@@ -137,7 +130,7 @@ def client_thread(buff):
 				self.PORT_Mapper.use_port(used_port)
 				message = '15:port:' + str(used_port)
 				file_server = FileServer.FileServer(used_port)
-				file_server.setSharedDirectory('/home/saket-pandey/Music')
+				file_server.setSharedDirectory('/home/kritika/Desktop/files')
 				file_server.startServer()
 
 				while  True:
@@ -156,21 +149,16 @@ def client_thread(buff):
 				message = '17:ACK:' + str("none")
 				file_server.stopServer()
 				filename_key = data[data.rfind(':')+1:]
-				print "filename_key",filename_key
+
 				#update_trie(self, filename)
 
 
 				masters_list = get_masters_from_persistence("server 2:LIST_OF_MASTERS")
 				list_of_masters = masters_list.split()
-				print "list of masters :" , list_of_masters,"PPPPPPPPP"
 
 				for master_ip in list_of_masters:
-					#print "master do naaaaa",master_ip
-					update_trie(self, filename_key, master_ip)       # later not to store ip beacuse trie on master will just have the file names
-					#tester(self,"666666")
+					update_trie(self, filenamekey, master_ip)       # later not to store ip beacuse trie on master will just have the file names
 
-				print "Updated trie in all masters"					
-	
 				while  True:
 					try :
 						#Set the whole string
@@ -200,14 +188,12 @@ def client_thread(buff):
 			elif data[:3] == '22:' :
 				print "Pastry search protocol"
 				filekey = data[data.rfind(':')+1:]
-				print "filekey :",filekey
 				step = 0
-				for i in range(0,min(len(self.nodeid),filekey)):
+				for i in range(0,min(len(self.nodeid,filekey))):
 					if(self.nodeid[i] != filekey[i]):
 						break
-					else:
+					else
 						step += 1
-				print "current matching steps :",step
 				target_ip = client_back_process(self,conn,filekey,str(step))
 				return target_ip
 
@@ -228,15 +214,15 @@ def client_thread(buff):
 def get_masters_from_persistence(message):
 	s = socket.socket()             # Create a socket object
     #host = '172.17.23.17'
-	host = '172.17.14.2'	
+	#host = '172.26.35.147'	
 	# just to show to bibhas sir-----
-	#ip_ob = IP.IP()
-	#my_ip = ip_ob.get_my_ip()
+	ip_ob = IP.IP()
+	my_ip = ip_ob.get_my_ip()
 	#self.ip = my_ip
-	#host = my_ip
+	host = my_ip
 	#---------------------------------
 
-	port = 9986                 # Reserve a port for your service.
+	port = 9935                 # Reserve a port for your service.
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
@@ -258,52 +244,51 @@ def client_back_process(self,conn,filekey,step):
 	try :
 		step_next = str(int(step) + 1)
 
+		if data.find("REQUEST") is not -1:
 
-		check = self.check_information(self.nodeid,step)
+			print "Request query from the peer with ip : ",addr
+
+			check = self.check_information(peer_nodeid,step)
 
 
-		print "checking done :",check
+			print "checking done :",check
 
-		message = ""
+			message = ""
 
-		if(check is not "NULL"):         ###########------ checking the leaf and routing --------
-			closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ str(check))
-			#closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ "a4db03a4fae6df7531f99060a4d2751d14e78805")   # for dummy check
-			try:                                # to forward the request to the next peer
-				print "forwarding the request to ",closest_peer
+			if(check is not "NULL"):         ###########------ checking the leaf and routing --------
+				closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ str(check))
+				#closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ "a4db03a4fae6df7531f99060a4d2751d14e78805")   # for dummy check
+				try:                                # to forward the request to the next peer
+					print "forwarding the request"
+	
+					## ------------- find closest_peer's ip using routingtable and leaf set ???--------- 
+					message = Thread(target=self.client_front_process, args=(filekey,closest_peer)).start()     
+					
+				except Exception, errtxt:
+					print errtxt
 
-				## ------------- find closest_peer's ip using routingtable and leaf set ???---------
+			else:
+				message = self.ip
 
-				queue = Queue.Queue() 
-				thread = threading.Thread(target=self.client_front_process, args=(filekey,closest_peer,queue))
-				thread.start()     
-				thread.join()
-				message = queue.get()
-
-			except Exception, errtxt:
-				print errtxt
-
-		else:
-			message = self.ip
-			print "only one :",message
-
-		print "sending the collective message : ",message
-		while  True:
-			try :
-				conn.sendall(message)
-			except socket.error:
-				print 'Send failed and retrying'
-				continue
-			finally :
-				break
-		#conn.sendall(reply)
+			print "sending the collective message : ",message
+			while  True:
+				try :
+					conn.sendall(message)
+				except socket.error:
+					print 'Send failed and retrying'
+					continue
+				finally :
+					break
 		conn.close()
-	except Exception, errtxt:
-		print errtxt
+		break
+		conn.sendall(reply)
+	except :
+		print "Prob detected in client back process"
+		conn.close()
 	#conn.sendall(reply)
 	 
 	#came out of loop
-	conn.close()
+	#conn.close()
 
 
 def peer_back_process(bundle):
@@ -325,19 +310,13 @@ def peer_back_process(bundle):
 			#Receiving from client
 			data = conn.recv(BUFFER)
 
-			#peer_ip = data[data.rfind('>') + 1:data.rfind(':')]    # client ip from whom search started
-			#peer_nodeid = hashlib.sha1(peer_ip).hexdigest()
+			peer_ip = data[data.rfind('>') + 1:data.rfind(':')]    # client ip from whom search started
+			peer_nodeid = hashlib.sha1(peer_ip).hexdigest()
 
-			print data
-			peer_nodeid = data[data.rfind('>') + 1:data.rfind(':')]
+			#peer_nodeid = "abc4560"
 
 			step = data[data.rfind(':') + 1:]          # step to know which row of 
-
-			if(step == "-1"):
-				step = self.number_of_matching_digits(peer_nodeid)
-				print "Now step is : ",step
 														 # its routing table to be returned
-			print "^^ ",step 
 			step_next = str(int(step) + 1)
 
 			if data.find("REQUEST") is not -1:
@@ -356,69 +335,48 @@ def peer_back_process(bundle):
 					#closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ "a4db03a4fae6df7531f99060a4d2751d14e78805")   # for dummy check
 					try:                                # to forward the request to the next peer
 						print "forwarding the request"
-						msg_to_send = "REQUEST INTERMEDIATE <ip>"+ peer_nodeid +":"+step_next
+						msg_to_send = "REQUEST INTERMEDIATE <ip>"+ peer_ip +":"+step_next
 
 						print "msg to send :",msg_to_send
 						print "closest peer :",closest_peer
 						## ------------- find closest_peer's ip using routingtable and leaf set ???--------- 
-
-						queue = Queue.Queue()
-						thread_ = threading.Thread(target=self.peer_front_process, args=(msg_to_send,closest_peer,queue))
-						     # Separate thread to accept the incoming connections from tier 2 peers
-						thread_.start()
-						thread_.join()
-						message = queue.get()
+						message = Thread(target=self.peer_front_process, args=(msg_to_send,closest_peer)).start()     
+						message = message + " ^"
+						for cols in self.routing[int(step)]:       # send the row of intermediate routing table
+							message = message + " " + cols
 					except Exception, errtxt:
 						print errtxt
 
 				else:
 					print "sending back the leaves"
 
-					
-					message = message + "&"
-					for lf in self.leaf:                  # sending leaf set back from the Z node
-						message = message + " " + lf
-					message = message + " #"
+					if(len(self.leaf) > 0):
+						message = "LEAF:"
+						for lf in self.leaf:                  # sending leaf set back from the Z node
+							message = message + " " + lf
+						message = message + " FEAL"
 
-				print "sendinf the routing table rows"
-				print len(self.routing)," ",int(step)
-				message = message + "Routing "
-				#print "ey uu ",step
+					print "sendinf the routing table rows"
+					print len(self.routing)," ",int(step)
+					if(len(self.routing) > int(step)):
+						message = message + " ROUTING: ^"
+						for cols in self.routing[int(step)]:
+							message = message + " " + cols	
 
-				if(len(self.routing) > int(step)):
-				#	print ":) :) "
-					#message = message + " ROUTING: ^"
-					for cols in self.routing[int(step)]:
-						message = message + " " + cols	
-				message = message +" ^ "+self.nodeid
- 
 				if data.find("START") is not -1:               # to check if this is the A peer
 					print "The node was starting node so send neighbours"
-					message = message + "$ "
 					if(len(self.neighbour) > 0):
 						print "getting the neight"	
+						message = message + " Neighbour"	 
+						print "^^ ",message
 						for neig in self.neighbour:
 								message = message + " " +  neig
-					message = message + "@"+str(step)
 
-				print "Updating the Routing table with peer having match of : ",step
+				print "Updating the Routing table with peer having match of : "
 				curr_size = len(self.routing)
-				for i in range(curr_size,int(step)+2):
-					self.routing.append(["NULL"]*5)
+				for i in range(curr_size,int(step)+1):
+					self.routing.append(["NULL"]*16)
 				self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]] = peer_nodeid   # updating the routing table of cuurent node with the joining peer id
-				
-				print "Updating leaf set with peer having match of : ",step
-				bisect.insort(self.leaf,peer_nodeid)
-				if(self.nodeid > peer_nodeid):
-					self.leaf = self.leaf[1:]
-				else:
-					self.leaf = self.leaf[:-1]
-
-				print "Table after updation"
-				for i in range(0,len(self.routing)):
-					for j in range(0,len(self.routing[i])):
-						print self.routing[i][j], " ",
-					print "\n"
 
 				print "sending the collective message : ",message
 				while  True:
@@ -431,9 +389,9 @@ def peer_back_process(bundle):
 						break
 			conn.close()
 			break
-			#conn.sendall(reply)
-	except Exception, errtxt:
-		print errtxt
+			conn.sendall(reply)
+	except :
+		print "Prob detected in peer back process"
 		conn.close()
 	#conn.sendall(reply)
 	 
@@ -461,7 +419,6 @@ class Server :
 		self.ip = ""
 		self.nodeid = ""
 		self.A_server = ""
-		self.mental = "mental"
 
 		# Pastry protocol datastructures :--------
 		self.leaf = []       # contain Leaf nodes having L/2 closest small and L/2 closest greater nodes
@@ -512,80 +469,22 @@ class Server :
 
 		self.register_to_persistence()
 
-		if self.A_server is "0" :                         # decide this condition of master selection later
+		if self.A_server.find('0') is not -1 :                         # decide this condition of master selection later
 			print "I am the first peer in the network"
 		else:	
 			try:
-				queue = Queue.Queue()
-				thread_ = threading.Thread(target=self.peer_front_process, args=("REQUEST START<id>" +self.nodeid + ":-1",self.A_server,queue))
-				thread_.start()     # Separate thread to accept the incoming connections from tier 2 peers
+				data = Thread(target=self.peer_front_process, args=("REQUEST <ip>" +self.ip + " :0",self.A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
 				# decoding the received data after the search process done
-				thread_.join()
-				msg = queue.get()
-				print "Decoding the data : ",msg
-				leaf = msg[msg.rfind('&')+1:msg.rfind('#')]
-
-				leaf = leaf.strip()
-				self.leaf = leaf.split()
-				print "leaf is : ",self.leaf
-
-				nei = msg[msg.rfind('$')+1:msg.rfind('@')]
-				nei = nei.split()
-				print "Neighbour is : ", self.neighbour
-
-				step = msg[msg.rfind('@')+1:]
-				step = int(step)
-
-				routing = msg[msg.rfind('#')+1:msg.rfind('$')]
-				routing = routing.strip()
-				routing = routing.split('Routing')
-
-				nodes_on_path = []
-				self.routing = []
-				for i in range(0,step):
-					self.routing.append(["NULL"]*5)
-
-				for i in range(1,len(routing)):
-					x = routing[i].strip()
-					row = x[:x.rfind('^')].strip()
-					node = x[x.rfind('^')+1:].strip()
-					nodes_on_path.append(node)
-					entries = row.split()
-					self.routing.append(entries)
-					#print "hey ",i+1
-					#print node, " ",row," ",entries
-				
-				print "Routing table : "
-				print self.routing		
-
-				print "Updating the leaf set :"
-				for node in nodes_on_path:
-					bisect.insort(self.leaf,node)
-					if(len(self.leaf) > 4):
-						if(self.nodeid > node):
-							self.leaf = self.leaf[1:]
-						else:
-							self.leaf = self.leaf[:-1]
-				print "leaf set after updation :"
-				print self.leaf
-
+				print "Received data :"
+				print data
 
 			except Exception, errtxt:
 				print errtxt
-		
+
 		self.bind_and_serve()                 # communication with peers and clients after server creation
 		
 		print 'Super Outside'
-
-	def number_of_matching_digits(self,peer_nodeid):
-		i = 0;
-		l1 = len(self.nodeid)
-		l2 = len(peer_nodeid)
-		while(i<min(l1,l2)):
-			if(self.nodeid[i]!=peer_nodeid[i]):
-				break
-			i += 1
-		return str(i)	
+		
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
@@ -598,8 +497,8 @@ class Server :
 		#host = my_ip
 		#---------------------------------
 
-		host = '172.17.14.2'
-		port = 9986                # Reserve a port for your service.
+		host = '172.17.14.3'
+		port = 9935                # Reserve a port for your service.
 
 		s.connect((host, port))
 
@@ -608,8 +507,8 @@ class Server :
 		s.send(message)
 
 		msg = s.recv(1024)
-		self.nodeid = msg[:msg.rfind(':')]
-		self.A_server = msg[msg.rfind(':')  + 1:]     # ip of A server
+		self.nodeid = msg[:msg.rfind(':') - 1]
+		self.A_server = msg[msg.rfind(':')  + 1:]
 		print msg
 
 		s.close()
@@ -631,7 +530,7 @@ class Server :
 		return "NULL"
 
 
-	def peer_front_process(self,msg_to_send,closest_peer_ip,queue) :
+	def peer_front_process(self,msg_to_send,closest_peer_ip) :
 		data = ""
 		print "Forwarding the message to the closest peer"
 		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -657,10 +556,10 @@ class Server :
 				break
 
 		data = self.soc_conn_peer.recv(4096)
-		queue.put(data)
 		self.soc_conn_peer.close()
+		return data
 
-	def client_front_process(self,msg_to_send,closest_peer_ip,queue) :
+	def client_front_process(self,msg_to_send,closest_peer_ip) :
 		data = ""
 		print "Forwarding the message to the closest peer"
 		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -680,14 +579,14 @@ class Server :
 			try :
 				self.soc_conn_peer.sendall(msg_to_send)
 			except socket.error:
-				print 'Send failed client' 
+				print 'Send failed server' 
 				continue
 			finally :
 				break
 
 		data = self.soc_conn_peer.recv(4096)
-		queue.put(data)
 		self.soc_conn_peer.close()
+		return data
 
 
 	def peer_back_thread(self):
@@ -779,7 +678,7 @@ class Server :
 
 
 def main() :
-	server_obj = Server(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],sys.argv[5],sys.argv[6])
+	server_obj = Server(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 
 
 if __name__ == "__main__" :

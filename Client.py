@@ -13,9 +13,9 @@ class Client():
 		#---------------------------------
 		#self.MASTER_SERVER_IP = 	# GET from persistance
 		
-		self.MASTER_SERVER_PORT = 4077
+		self.MASTER_SERVER_PORT = 9046
 
-		self.TIER_TWO_SERVER_PORT = 4071    # first port put in case of server.py
+		self.TIER_TWO_SERVER_PORT = 9041    # first port put in case of server.py
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
 		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)
@@ -111,14 +111,15 @@ class Client():
 		fs.close()
 		print 'File sucessfully Downloaded.'
 
-	'''def search_pastry(self,server,filename):
+	def search_pastry(self,server,filekey):
 		fs = self.get_socket_connection(server, self.TIER_TWO_SERVER_PORT)
-		filekey = ?????
+		print "Requesing the file with filekey : ",filekey
 		fs.sendall('22:Request_the_target :'+filekey)
 		target_ip = fs.recv(1024)
+		print "testing arget ",target_ip
 		fs.close()
 		return target_ip
-'''
+
 
 
 #c = Client()
