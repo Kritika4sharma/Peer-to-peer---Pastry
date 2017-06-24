@@ -13,9 +13,9 @@ class Client():
 		#---------------------------------
 		#self.MASTER_SERVER_IP = 	# GET from persistance
 		
-		self.MASTER_SERVER_PORT = 9046
+		self.MASTER_SERVER_PORT = 9096
 
-		self.TIER_TWO_SERVER_PORT = 9041    # first port put in case of server.py
+		self.TIER_TWO_SERVER_PORT = 9091    # first port put in case of server.py
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
 		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)

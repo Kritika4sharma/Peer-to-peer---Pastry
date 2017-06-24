@@ -236,7 +236,7 @@ def get_masters_from_persistence(message):
 	#host = my_ip
 	#---------------------------------
 
-	port = 9986                 # Reserve a port for your service.
+	port = 9983                 # Reserve a port for your service.
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
@@ -403,8 +403,12 @@ def peer_back_process(bundle):
 
 				print "Updating the Routing table with peer having match of : ",step
 				curr_size = len(self.routing)
+				print "curr size :" ,curr_size," Table is : ",self.routing
 				for i in range(curr_size,int(step)+2):
-					self.routing.append(["NULL"]*5)
+					print "pushing the row : ",i
+					self.routing.append(["NULL"]*12)
+				print "here i m : ",self.routing
+				print "Now : ",char_to_int[peer_nodeid[int(step)]]," ",peer_nodeid[int(step)]," ",int(step)," ",peer_nodeid
 				self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]] = peer_nodeid   # updating the routing table of cuurent node with the joining peer id
 				
 				print "Updating leaf set with peer having match of : ",step
@@ -543,7 +547,7 @@ class Server :
 				nodes_on_path = []
 				self.routing = []
 				for i in range(0,step):
-					self.routing.append(["NULL"]*5)
+					self.routing.append(["NULL"]*10)
 
 				for i in range(1,len(routing)):
 					x = routing[i].strip()
@@ -599,7 +603,7 @@ class Server :
 		#---------------------------------
 
 		host = '172.17.14.2'
-		port = 9986                # Reserve a port for your service.
+		port = 9983                # Reserve a port for your service.
 
 		s.connect((host, port))
 

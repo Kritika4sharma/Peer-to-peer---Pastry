@@ -265,7 +265,7 @@ class Master :
 
 		#host = '172.26.35.147'
 		#host = '172.17.23.17'
-		port = 9986                 # Reserve a port for your service.
+		port = 9983                 # Reserve a port for your service.
 
 		s.connect((host, port))
 
