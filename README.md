@@ -8,4 +8,4 @@ For running the software :
 5. To run server, type "python server.py server_port peer_forward_port peer_backward_port client_forward_port client_backward_port master_port".
 6. Change the ports in file Client.py, setting self.MASTER_SERVER_PORT = master_port and self.TIER_TWO_SERVER_PORT = server_port as passed in arguments in previous two commands.
 7. For uploading : Type "python new_client.py --upload file_name"
-   For downloading : Type "python new_client.py --download file_name"
+8. For downloading : Type "python new_client.py --download file_name"
