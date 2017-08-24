@@ -37,7 +37,7 @@ class Server :
 			finally :
 				break
 
-		ip_ob = IP.IP()               # just using the ip of current system for testing
+		ip_ob = IP.IP()               # Get the ip of the system (machine_ip for master)
 		my_ip = ip_ob.get_my_ip()
 		self.ip = my_ip
 
@@ -45,7 +45,7 @@ class Server :
 
 		self.HOST = self.ip 
 
-		print "Initiating master"
+		print "Initiating master ",my_ip
 		self.master_node = master_8.Master(self.MASTER_PORT)   # creating the master using file master_8.py
 	
 
