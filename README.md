@@ -1,5 +1,12 @@
 Skynet-P2P File Sharing
 
+Packages(in Python) Required :
+1. ipaddress
+2. netifaces
+3. recordtype 
+4. pytftlib.handlers 
+5. pysendfile 
+
 For running the software :
 1. Go to the folder "persistence".In file persist.py, set the free port where persistence will listen. 
 2. Type "python persist.py". This will run the persistence.
