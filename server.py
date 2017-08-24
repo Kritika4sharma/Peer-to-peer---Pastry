@@ -17,8 +17,12 @@ import difflib
 import bisect
 import Queue
 import threading
-
 import FileServer
+
+persist_port = 9996                   # set port where persistence is listening
+persist_ip = '172.20.52.8'             # set ip of persistence
+master_ip1 = '172.20.52.8'              # set ip of master
+files_path = '/home/placements2018/Music'
 
 
 char_to_int = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':10,'b':11,'c':12,'d':13,'e':14,'f':15}
@@ -84,12 +88,12 @@ def client_thread(buff):
 	global BUFFER, count
 	count += 1
 
-	# just to show to bibhas sir-----
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
 	#self.ip = my_ip
 	#---------------------------------
-	#my_ip = "10.0.0.4"         # ip of master
+	my_ip = master_ip1         # ip of master
+
 	conn = buff[0]
 	self = buff[1]
 	used_port = 0
@@ -137,9 +141,10 @@ def client_thread(buff):
 				self.PORT_Mapper.use_port(used_port)
 				message = '15:port:' + str(used_port)
 				file_server = FileServer.FileServer(used_port)
-				file_server.setSharedDirectory('/home/saket-pandey/Music')
+				file_server.setSharedDirectory(files_path)
 				file_server.startServer()
 
+				print "sending to client : ",message
 				while  True:
 					try :
 						conn.sendall(message)
@@ -165,7 +170,6 @@ def client_thread(buff):
 				print "list of masters :" , list_of_masters,"PPPPPPPPP"
 
 				for master_ip in list_of_masters:
-					#print "master do naaaaa",master_ip
 					update_trie(self, filename_key, master_ip)       # later not to store ip beacuse trie on master will just have the file names
 					#tester(self,"666666")
 
@@ -227,16 +231,12 @@ def client_thread(buff):
 
 def get_masters_from_persistence(message):
 	s = socket.socket()             # Create a socket object
-    #host = '172.17.23.17'
-	host = '172.17.14.2'	
-	# just to show to bibhas sir-----
-	#ip_ob = IP.IP()
-	#my_ip = ip_ob.get_my_ip()
-	#self.ip = my_ip
-	#host = my_ip
+
+	host = persist_ip
+	print "connecting to persistence : ",host
 	#---------------------------------
 
-	port = 9983                 # Reserve a port for your service.
+	port = persist_port                # port where persistence is listening
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
@@ -465,7 +465,6 @@ class Server :
 		self.ip = ""
 		self.nodeid = ""
 		self.A_server = ""
-		self.mental = "mental"
 
 		# Pastry protocol datastructures :--------
 		self.leaf = []       # contain Leaf nodes having L/2 closest small and L/2 closest greater nodes
@@ -489,11 +488,6 @@ class Server :
 
 		self.socket_obj = {}
 
-		# just to show to bibhas sir-----
-	#	ip_ob = IP.IP()
-	#	my_ip = ip_ob.get_my_ip()
-	#	self.ip = my_ip
-		#---------------------------------
 
 		#self.nodeid = "abc8960"      # dummy nodeid
 
@@ -515,6 +509,9 @@ class Server :
 		#exit()
 
 		self.register_to_persistence()
+		#get_masters_from_persistence("server 2:LIST_OF_MASTERS")
+
+		
 
 		if self.A_server is "0" :                         # decide this condition of master selection later
 			print "I am the first peer in the network"
@@ -580,6 +577,7 @@ class Server :
 		self.bind_and_serve()                 # communication with peers and clients after server creation
 		
 		print 'Super Outside'
+		
 
 	def number_of_matching_digits(self,peer_nodeid):
 		i = 0;
@@ -593,17 +591,9 @@ class Server :
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
-		#host = '172.17.23.17'
 		
-		# just to show to bibhas sir-----
-		#ip_ob = IP.IP()
-		#my_ip = ip_ob.get_my_ip()
-		#self.ip = my_ip
-		#host = my_ip
-		#---------------------------------
-
-		host = '172.17.14.2'
-		port = 9983                # Reserve a port for your service.
+		host = persist_ip
+		port = persist_port                # Reserve a port for your service.
 
 		s.connect((host, port))
 
