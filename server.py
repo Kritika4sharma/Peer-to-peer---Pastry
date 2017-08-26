@@ -19,13 +19,13 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9996                   # set port where persistence is listening
+persist_port = 9985                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
 
 
-char_to_int = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':10,'b':11,'c':12,'d':13,'e':14,'f':15}
+char_to_int = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':10,'b':11,'c':12,'d':13,'e':14,'f':15,'g':16}
 
 BUFFER = 4096
 count = 0
@@ -390,6 +390,7 @@ def peer_back_process(bundle):
 					#message = message + " ROUTING: ^"
 					for cols in self.routing[int(step)]:
 						message = message + " " + cols	
+
 				message = message +" ^ "+self.nodeid
  
 				if data.find("START") is not -1:               # to check if this is the A peer
@@ -403,10 +404,11 @@ def peer_back_process(bundle):
 
 				print "Updating the Routing table with peer having match of : ",step
 				curr_size = len(self.routing)
+				#curr_size = 
 				print "curr size :" ,curr_size," Table is : ",self.routing
 				for i in range(curr_size,int(step)+2):
 					print "pushing the row : ",i
-					self.routing.append(["NULL"]*12)
+					self.routing.append(["NULL"]*20)
 				print "here i m : ",self.routing
 				print "Now : ",char_to_int[peer_nodeid[int(step)]]," ",peer_nodeid[int(step)]," ",int(step)," ",peer_nodeid
 				self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]] = peer_nodeid   # updating the routing table of cuurent node with the joining peer id
@@ -417,6 +419,7 @@ def peer_back_process(bundle):
 					self.leaf = self.leaf[1:]
 				else:
 					self.leaf = self.leaf[:-1]
+				print "Leaf set after updation ",self.leaf
 
 				print "Table after updation"
 				for i in range(0,len(self.routing)):
@@ -470,6 +473,9 @@ class Server :
 		self.leaf = []       # contain Leaf nodes having L/2 closest small and L/2 closest greater nodes
 		self.neighbour = []  # contain neighbours - k closest nodes according to the proximity measure
 		self.routing = []    # routing table
+
+		for i in range(0,20):
+			self.routing.append(["NULL"]*20)
 
 		connection_type = 1
 		print "GOING TO INITIALIZE IP ADDRESSSSSSSS"
@@ -542,9 +548,11 @@ class Server :
 				routing = routing.split('Routing')
 
 				nodes_on_path = []
-				self.routing = []
-				for i in range(0,step):
-					self.routing.append(["NULL"]*10)
+				#self.routing = []
+				#for i in range(0,step):
+				#	self.routing.append(["NULL"]*20)
+
+				print "Debugging : ",self.routing
 
 				for i in range(1,len(routing)):
 					x = routing[i].strip()
@@ -552,7 +560,9 @@ class Server :
 					node = x[x.rfind('^')+1:].strip()
 					nodes_on_path.append(node)
 					entries = row.split()
-					self.routing.append(entries)
+					for j in range(0,20):	
+						self.routing[step][j] = entries[j]        # debugging1
+					#self.routing.append(entries)
 					#print "hey ",i+1
 					#print node, " ",row," ",entries
 				
@@ -589,6 +599,22 @@ class Server :
 			i += 1
 		return str(i)	
 
+	def check_information(self,peer_nodeid,step):
+		l = len(self.leaf)
+		if(l==1):
+			return self.leaf[0]
+
+		if(l>1 and peer_nodeid>=self.leaf[0] and peer_nodeid<=self.leaf[l-1]):
+			return min(self.leaf, key=lambda v: len(set(peer_nodeid) ^ set(v)))
+			#return difflib.get_close_matches(peer_nodeid, self.leaf,1)
+
+
+		print char_to_int[peer_nodeid[int(step)]]
+		if(len(self.routing) > step):
+			return self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]]              # sending the entry from routing table
+		return "NULL"
+
+
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
 		
@@ -608,21 +634,6 @@ class Server :
 
 		s.close()
 		print('connection closed')
-
-	def check_information(self,peer_nodeid,step):
-		l = len(self.leaf)
-		if(l==1):
-			return self.leaf[0]
-
-		if(l>1 and peer_nodeid>=self.leaf[0] and peer_nodeid<=self.leaf[l-1]):
-			return min(self.leaf, key=lambda v: len(set(peer_nodeid) ^ set(v)))
-			#return difflib.get_close_matches(peer_nodeid, self.leaf,1)
-
-
-		print char_to_int[peer_nodeid[int(step)]]
-		if(len(self.routing) > step):
-			return self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]]              # sending the entry from routing table
-		return "NULL"
 
 
 	def peer_front_process(self,msg_to_send,closest_peer_ip,queue) :
