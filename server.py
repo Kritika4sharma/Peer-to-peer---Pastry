@@ -19,7 +19,7 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9988                   # set port where persistence is listening
+persist_port = 9987                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
@@ -581,6 +581,15 @@ class Server :
 							self.leaf = self.leaf[1:]
 						else:
 							self.leaf = self.leaf[:-1]
+
+					step = 0
+					for i in range(0,min(len(self.nodeid),node)):
+						if(self.nodeid[i] != node[i]):
+							break
+						else:
+							step += 1
+					self.routing[int(step)][char_to_int[node[int(step)]]] = node
+
 				print "leaf set after updation :"
 				print self.leaf
 
