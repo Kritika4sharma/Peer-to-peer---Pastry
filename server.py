@@ -19,7 +19,7 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9994                   # set port where persistence is listening
+persist_port = 9992                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
@@ -212,7 +212,7 @@ def client_thread(buff):
 					else:
 						step += 1
 				print "current matching steps :",step
-				target_ip = start_search_for_client(self,conn,filekey+":"+str(step))
+				target_ip = client_back_process(self,conn,filekey+":"+str(step))
 
 				try:                               
 					print "Starting the search ",closest_peer
