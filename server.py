@@ -212,12 +212,11 @@ def client_thread(buff):
 					else:
 						step += 1
 				print "current matching steps :",step
-				target_ip = client_back_process(self,conn,filekey+":"+str(step))
 
 				try:                               
-					print "Starting the search ",closest_peer
+					print "Starting the search for client"
 
-					target_ip = client_back_process()
+					target_ip = client_back_process(self,conn,filekey+":"+str(step))
 
 				except Exception, errtxt:
 					print errtxt
