@@ -19,7 +19,7 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9991                   # set port where persistence is listening
+persist_port = 9989                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
@@ -260,7 +260,7 @@ def get_masters_from_persistence(message):
 	return masters_list
 
 
-def client_back_process(self,bundle,msg):
+def client_back_process(self,conn,msg):
 	global BUFFER
 
 	try :
@@ -753,7 +753,7 @@ class Server :
 			bundle = [conn, self, addr[0]]			
 			data = conn.recv(BUFFER)
 
-			start_new_thread(client_back_process ,(self,bundle,data))
+			start_new_thread(client_back_process ,(self,bundle[0],data))
 
 	def bind_and_serve(self):
 		# ***  here we can make another decision to keep two seperate ports to listen to PEERS and CLIENTS
