@@ -19,7 +19,7 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9987                   # set port where persistence is listening
+persist_port = 9984                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
@@ -265,8 +265,9 @@ def client_back_process(self,conn,msg):
 	try :
 		#step = msg[msg.rfind('@')+1:]
 		step = msg[msg.rfind(':')+1:]
-		filekey = msg[:msg.rfind(':')-1]
+		filekey = msg[:msg.rfind(':')]
 		step_next = str(int(step) + 1)
+		print "step next to go for : ",step_next
 
 		check = self.check_information(self.nodeid,step)
 
