@@ -19,7 +19,7 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9995                   # set port where persistence is listening
+persist_port = 9994                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
@@ -212,7 +212,16 @@ def client_thread(buff):
 					else:
 						step += 1
 				print "current matching steps :",step
-				target_ip = client_back_process(self,conn,filekey,str(step))
+				target_ip = start_search_for_client(self,conn,filekey+":"+str(step))
+
+				try:                               
+					print "Starting the search ",closest_peer
+
+					target_ip = client_back_process()
+
+				except Exception, errtxt:
+					print errtxt
+
 				return target_ip
 
 			elif data[:-1] == 'exit':
@@ -251,31 +260,27 @@ def get_masters_from_persistence(message):
 	return masters_list
 
 
-def client_back_process(self,conn,filekey,step):
+def client_back_process(bundle,msg):
 	global BUFFER
 
-	#here should be added a try catch block - to detect lost connecions or failed connections
 	try :
+		#step = msg[msg.rfind('@')+1:]
+		step = msg[msg.rfind(':')+1:]
+		filekey = msg[:msg.rfind(':')-1]
 		step_next = str(int(step) + 1)
 
-
 		check = self.check_information(self.nodeid,step)
-
 
 		print "checking done :",check
 
 		message = ""
 
-		if(check is not "NULL"):         ###########------ checking the leaf and routing --------
+		if(check is not "NULL"):         
 			closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ str(check))
-			#closest_peer = get_masters_from_persistence("server IP_FROM_ID:"+ "a4db03a4fae6df7531f99060a4d2751d14e78805")   # for dummy check
-			try:                                # to forward the request to the next peer
-				print "forwarding the request to ",closest_peer
-
-				## ------------- find closest_peer's ip using routingtable and leaf set ???---------
-
+			print "forwarding the request to ",closest_peer
+			try:
 				queue = Queue.Queue() 
-				thread = threading.Thread(target=self.client_front_process, args=(filekey,closest_peer,queue))
+				thread = threading.Thread(target=self.client_front_process, args=(filekey+":"+str(step_next),closest_peer,queue))
 				thread.start()     
 				thread.join()
 				message = queue.get()
@@ -739,14 +744,16 @@ class Server :
 				break
 
 		self.socket_obj['client_port_for_back'].listen(10)
+		global BUFFER
 
 		while True:
 			conn, addr = self.socket_obj['client_port_for_back'].accept()
 			print 'Connected @ peer for client-query ... with ' + addr[0] + ':' + str(addr[1])
 			
 			bundle = [conn, self, addr[0]]			
-			#start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-			start_new_thread(client_back_process ,(bundle,))
+			data = conn.recv(BUFFER)
+
+			start_new_thread(client_back_process ,(bundle,data))
 
 	def bind_and_serve(self):
 		# ***  here we can make another decision to keep two seperate ports to listen to PEERS and CLIENTS
